@@ -1,0 +1,26 @@
+{
+  "name": "fluree-crypto-test",
+  "version": "1.0.0",
+  "description": "Test authid create process",
+  "main": "test.js",
+  "scripts": {
+   "start":"node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StylusFrost/fluree-crypto-test.git"
+  },
+  "keywords": [
+    "fluree"
+  ],
+  "author": "Pedro Miguel Díaz Peña <pm.diaz.pena@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/StylusFrost/fluree-crypto-test/issues"
+  },
+  "homepage": "https://github.com/StylusFrost/fluree-crypto-test",
+  "dependencies": {
+    "bs58check":"^2.1.2",
+    "@fluree/crypto-base":"^0.1.5"
+  }
+}
