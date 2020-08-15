@@ -21,6 +21,7 @@
   "homepage": "https://github.com/StylusFrost/fluree-crypto-test",
   "dependencies": {
     "bs58check":"^2.1.2",
-    "@fluree/crypto-base":"^0.1.5"
+    "@fluree/crypto-base":"^0.1.5",
+    "secp256k1": "^4.0.1"
   }
 }
