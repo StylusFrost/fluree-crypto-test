@@ -1,6 +1,7 @@
 const bs58check = require('bs58check')
 const cryptoBase = require('@fluree/crypto-base');
 const secp256k1= require('secp256k1/elliptic')
+const { ecdsaSign, ecdsaRecover, publicKeyConvert } = require('ethereum-cryptography/secp256k1')
 const crypto = require('crypto')
 
 function hexToUnit8Array(str) {
@@ -210,10 +211,14 @@ const sigBase = cryptoBase.sign_message(msg, pk);
 const signingStringHash = crypto.createHash("sha256").update(hexToUnit8Array(msg)).digest("hex")
 sigObj = secp256k1.ecdsaSign(hexToUnit8Array(signingStringHash), hexToUnit8Array(pk))
 
+// Using Ethereum Cryto
+const sig = ecdsaSign(hexToUnit8Array(signingStringHash),  hexToUnit8Array(pk))
+
 
 console.log('*****Step 2*****ERROR****')
 console.log('signatureExpected         : ' + '1b3046022100cbd32e463567fefc2f120425b0224d9d263008911653f50e83953f47cfbef3bc022100fcf81206277aa1b86d2667b4003f44643759b8f4684097efd92d56129cd89ea8')
 console.log('signatureFlureeCryptoBase : ' + sigBase)
+console.log('ethereum-cryptography     : ' + '1b' + Buffer.from(secp256k1.signatureExport(sig.signature)).toString('hex'))
 console.log('signatureFlureeDOC        : ' + '1b' + Buffer.from(secp256k1.signatureExport(sigObj.signature)).toString('hex'))
 console.log('*****Step 2*****ERROR****')
 console.log('')
