@@ -1,8 +1,8 @@
 const bs58check = require('bs58check')
 const cryptoBase = require('@fluree/crypto-base');
-const secp256k1= require('secp256k1/elliptic')
-const { ecdsaSign, ecdsaRecover, publicKeyConvert } = require('ethereum-cryptography/secp256k1')
+const { ecdsaSign } = require('ethereum-cryptography/secp256k1')
 const crypto = require('crypto')
+const {ecsign,BN,ecrecover,privateToAuthID,importPublic} = require('flureejs-utils')
 
 function hexToUnit8Array(str) {
   return new Uint8Array(Buffer.from(str, 'hex'))
@@ -182,7 +182,6 @@ This returns:
 
 1b3046022100cbd32e463567fefc2f120425b0224d9d263008911653f50e83953f47cfbef3bc022100fcf81206277aa1b86d2667b4003f44643759b8f4684097efd92d56129cd89ea8
 
-
 */
 
 /* Fluree doc Signed Queries
@@ -193,9 +192,25 @@ In addition, after adding 27 to the recoveryByte, that number is converted into 
 
 */
 
+    const param = JSON.stringify({
+      "select":["*"],
+      "from": "_auth"
+    })
+    const formattedDate = 'Tue, 18 Aug 2020 09:02:54 GMT'//getRFC1123DateTime();
+    
+    const digest = crypto.createHash("sha256").update(param.normalize()).digest("base64")
 
-const pk = '6a5f415f49986006815ae7887016275aac8ffb239f9a2fa7172300578582b6c2'
-const msg= "hi there"
+    const uri = "/fdb/auditzone-testnet/sealdb/query"
+
+    var msg = "(request-target): post " + uri + 
+    "\nx-fluree-date: " + formattedDate + 
+    "\ndigest: SHA-256=" + digest;
+
+
+    
+const pk = 'fe0af041abb1c734f8ab18d5c35385ef1f1c54a7d91fd2a5f9fdd03fcf077600'
+const pubk= '038a271161197e408c9b64a684fcbd6c2b05c08dfcb2a8d3ef444671a128511b63'
+
 
 console.log('*****Step 1****')
 console.log('msg: ' + msg)
@@ -207,20 +222,29 @@ console.log('')
 // sign msg with cryto-base
 const sigBase = cryptoBase.sign_message(msg, pk);
 
-// As the document says with secp256k1 and sha2-256
-const signingStringHash = crypto.createHash("sha256").update(hexToUnit8Array(msg)).digest("hex")
-sigObj = secp256k1.ecdsaSign(hexToUnit8Array(signingStringHash), hexToUnit8Array(pk))
+// Ussing Flureejs-utils
 
-// Using Ethereum Cryto
-const sig = ecdsaSign(hexToUnit8Array(signingStringHash),  hexToUnit8Array(pk))
+const sigFluree = ecsign(msg,  pk)
 
+const newR = sigFluree.r[0] & 0x80 ? Buffer.concat([hexToUnit8Array('00'), sigFluree.r]) : sigFluree.r
+  const newS = sigFluree.s[0] & 0x80 ? Buffer.concat([hexToUnit8Array('00'), sigFluree.s]) : sigFluree.s
+  const result =
+    '02' +
+    newR.length.toString(16) +
+    newR.toString('hex') +
+    '02' +
+    newS.length.toString(16) +
+    newS.toString('hex')
+  const sigDER =
+  sigFluree.v.toString(16) +
+    '30' +
+    Buffer.from(result, 'hex').length.toString(16) +
+    result
 
-console.log('*****Step 2*****ERROR****')
-console.log('signatureExpected         : ' + '1b3046022100cbd32e463567fefc2f120425b0224d9d263008911653f50e83953f47cfbef3bc022100fcf81206277aa1b86d2667b4003f44643759b8f4684097efd92d56129cd89ea8')
-console.log('signatureFlureeCryptoBase : ' + sigBase)
-console.log('ethereum-cryptography     : ' + '1b' + Buffer.from(secp256k1.signatureExport(sig.signature)).toString('hex'))
-console.log('signatureFlureeDOC        : ' + '1b' + Buffer.from(secp256k1.signatureExport(sigObj.signature)).toString('hex'))
-console.log('*****Step 2*****ERROR****')
+console.log('*****Step 2*****OK****')
+console.log('signatureExpected         : ' + sigBase)
+console.log('signatureFluree-Utils     : ' +  sigDER)
+
+console.log('*****Step 2*****OK****')
 console.log('')
 console.log('*****END*TEST SIGN************* ')
-
